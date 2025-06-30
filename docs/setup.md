@@ -48,6 +48,8 @@ Note that the client workload does not require a sidecar in order to be part of 
 kubectl get pod -n default
 ```
 
+We also no longer need to concern ourselves with restarting workloads.
+
 ## Configure access logging
 
 Enable access logging for Gateways and Waypoints:
@@ -79,7 +81,7 @@ The canonical example used by the Istio project to represent a set of microservi
 Begin by deploying these microservices to the Kubernetes cluster, in their own namespace, `bookinfo`:
 
 ```shell
-kubectl create namespace `bookinfo`
+kubectl create namespace bookinfo
 ```
 
 ```shell
@@ -87,17 +89,7 @@ kubectl apply -n bookinfo \
   -f https://raw.githubusercontent.com/istio/istio/refs/heads/master/samples/bookinfo/platform/kube/bookinfo.yaml
 ```
 
-In ambient mode, we are no longer required to define "subsets" - specific versions of a microservice - with a `DestinationRule`.
-We can simply use a Kubernetes `Service` definition with the right combination of selectors.
-
-Apply the following resource, which defines these "sub" services for `bookinfo`:
-
-```shell
-kubectl apply -n bookinfo \
-  -f https://raw.githubusercontent.com/istio/istio/refs/heads/master/samples/bookinfo/platform/kube/bookinfo-versions.yaml
-```
-
-Finally, add all of the `bookinfo` workloads to the mesh, by [labeling their namespace](https://istio.io/latest/docs/ambient/getting-started/secure-and-visualize/):
+Add all of the `bookinfo` workloads to the mesh, by [labeling their namespace](https://istio.io/latest/docs/ambient/getting-started/secure-and-visualize/):
 
 ```shell
 kubectl label namespace bookinfo istio.io/dataplane-mode=ambient
