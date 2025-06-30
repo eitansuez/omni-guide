@@ -1,0 +1,15 @@
+---
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: httpbin.org
+  namespace: common-infrastructure
+spec:
+  hosts:
+  - httpbin.org
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+    targetPort: 443 # New: send traffic originally for port 80 to port 443
+  resolution: DNS

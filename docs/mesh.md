@@ -53,26 +53,7 @@ Configure a traffic split whereby 50% of requests are routed to the service `rev
 The following `HTTPRoute` captures the configuration:
 
 ```yaml
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: reviews-route
-  namespace: bookinfo
-spec:
-  parentRefs:
-  - group: ""
-    kind: Service
-    name: reviews
-    port: 9080
-  rules:
-  - backendRefs:
-    - name: reviews-v1
-      port: 9080
-      weight: 50
-    - name: reviews-v2
-      port: 9080
-      weight: 50
+--8<-- "reviews-route.yaml"
 ```
 
 Above, the difference in configuration from the ingress routing example is the `parentRef` being of type Service -- previously it was a reference to a Gateway.

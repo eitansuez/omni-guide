@@ -52,21 +52,10 @@ We also no longer need to concern ourselves with restarting workloads.
 
 ## Configure access logging
 
-Enable access logging for Gateways and Waypoints:
+Enable access logging for Gateways and Waypoints by applying the following Telemetry resource:
 
-```shell
-kubectl apply -f - <<EOF
----
-apiVersion: telemetry.istio.io/v1
-kind: Telemetry
-metadata:
-  name: enable-access-logging
-  namespace: istio-system
-spec:
-  accessLogging:
-    - providers:
-      - name: envoy
-EOF
+```yaml
+--8<-- "telemetry.yaml"
 ```
 
 Above, we use the `istio-system` "root" namespace to ensure that the configuration applies to all workloads in the mesh (all namespaces).

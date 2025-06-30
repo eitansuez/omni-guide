@@ -1,0 +1,16 @@
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+ name: allow-gateway-to-productpage
+ namespace: bookinfo
+spec:
+ selector:
+   matchLabels:
+     app: productpage
+ action: ALLOW
+ rules:
+ - from:
+   - source:
+       principals:
+       - cluster.local/ns/common-infrastructure/sa/shared-gateway-istio

@@ -31,35 +31,7 @@ kubectl label namespace common-infrastructure istio.io/dataplane-mode=ambient
 Thanks to the Kubernetes Gateway API, we can provision our gateway on demand, by applying the following `Gateway` resource:
 
 ```yaml
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: Gateway
-metadata:
-  name: shared-gateway
-  namespace: common-infrastructure
-spec:
-  gatewayClassName: istio
-  listeners:
-  - name: http
-    port: 80
-    protocol: HTTP
-    allowedRoutes:
-      namespaces:
-        from: Same
-  - name: bookinfo-https
-    protocol: HTTPS
-    port: 443
-    hostname: bookinfo.example.com
-    tls:
-      mode: Terminate
-      certificateRefs:
-      - name: bookinfo-cert
-    allowedRoutes:
-      namespaces:
-        from: Selector
-        selector:
-          matchLabels:
-            self-serve-ingress: "true"
+--8<-- "gateway.yaml"
 ```
 
 Let us break down the above configuration; we:
@@ -105,39 +77,7 @@ At this point the Gateway can receive HTTP requests from the internet, but will 
 The HTTPRoute resource to expose the `productpage` service's endpoints is bundled with Istio's `bookinfo` sample application.  Here it is, adjusted to this specific context:
 
 ```yaml
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: bookinfo-route
-  namespace: bookinfo
-spec:
-  hostnames:
-  - bookinfo.example.com
-  parentRefs:
-  - name: shared-gateway
-    namespace: common-infrastructure
-    sectionName: bookinfo-https
-  rules:
-  - matches:
-    - path:
-        type: Exact
-        value: /productpage
-    - path:
-        type: PathPrefix
-        value: /static
-    - path:
-        type: Exact
-        value: /login
-    - path:
-        type: Exact
-        value: /logout
-    - path:
-        type: PathPrefix
-        value: /api/v1/products
-    backendRefs:
-    - name: productpage
-      port: 9080
+--8<-- "bookinfo-route.yaml"
 ```
 
 It is worth calling out how the route binds to the Gateway through the `parentRefs` field, and that we bind specifically to the port 443 listener:  when a request arrives over HTTPS, the routing rules will match.  We expose various endpoints including the `productpage` web UI, access to static resources, the `/login` and `/logout` endpoints, and the `productpage` API.  The `backendRef` directs matching requests to the service running inside the cluster.
@@ -153,22 +93,7 @@ Istio allows us to overlay a security configuration as well.
 For example, we can define an AuthorizationPolicy to allow only the Ingress gateway to call the `productpage` service.
 
 ```yaml
----
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
- name: allow-gateway-to-productpage
- namespace: bookinfo
-spec:
- selector:
-   matchLabels:
-     app: productpage
- action: ALLOW
- rules:
- - from:
-   - source:
-       principals:
-       - cluster.local/ns/common-infrastructure/sa/shared-gateway-istio
+--8<-- "productpage-authz.yaml"
 ```
 
 Above, note the [SPIFFE](https://spiffe.io/docs/latest/spiffe-about/overview/) identity of the Gateway `shared-gateway` is a function of its namespace and associated service account name.

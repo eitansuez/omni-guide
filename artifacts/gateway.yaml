@@ -1,0 +1,29 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: shared-gateway
+  namespace: common-infrastructure
+spec:
+  gatewayClassName: istio
+  listeners:
+  - name: http
+    port: 80
+    protocol: HTTP
+    allowedRoutes:
+      namespaces:
+        from: Same
+  - name: bookinfo-https
+    protocol: HTTPS
+    port: 443
+    hostname: bookinfo.example.com
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: bookinfo-cert
+    allowedRoutes:
+      namespaces:
+        from: Selector
+        selector:
+          matchLabels:
+            self-serve-ingress: "true"

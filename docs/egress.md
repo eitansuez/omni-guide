@@ -38,21 +38,7 @@ The `ServiceEntry` resource is designed to allow Istio to be aware of services t
 Here is for example a `ServiceEntry` that communicates to Istio that mesh workloads may call the hostname `httpbin.org`.
 
 ```yaml
----
-apiVersion: networking.istio.io/v1
-kind: ServiceEntry
-metadata:
-  name: httpbin.org
-  namespace: common-infrastructure
-spec:
-  hosts:
-  - httpbin.org
-  ports:
-  - number: 80
-    name: http
-    protocol: HTTP
-    targetPort: 443 # New: send traffic originally for port 80 to port 443
-  resolution: DNS
+--8<-- "service-entry.yaml"
 ```
 
 In this case, the IP address of the target workload is obtained through DNS resolution.
@@ -68,20 +54,8 @@ Communication from the client to the gateway will use mutual TLS by virtue of bo
 The egress gateway can then be configured to call `httpbin.org` over TLS.
 We use a `DestinationRule` to capture the traffic policy and associate it with the host:
 
-```shell
-kubectl apply -f - <<EOF
----
-apiVersion: networking.istio.io/v1
-kind: DestinationRule
-metadata:
-  name: httpbin.org-tls
-  namespace: common-infrastructure
-spec:
-  host: httpbin.org
-  trafficPolicy:
-    tls:
-      mode: SIMPLE
-EOF
+```yaml
+--8<-- "tls-origination.yaml"
 ```
 
 TLS origination is the mirror-opposite of TLS termination, and requires less configuration since with simple TLS, only the server identifies itself to the client.
@@ -117,23 +91,7 @@ That is the essence of authorization.
 Study the following example, an AuthorizationPolicy that allows only HTTP GET-type operations to the external `httpbin` service's `/get` endpoint and nothing else:
 
 ```yaml
----
-apiVersion: security.istio.io/v1
-kind: AuthorizationPolicy
-metadata:
-  name: httpbin-get-only
-  namespace: common-infrastructure
-spec:
-  targetRefs:
-  - kind: ServiceEntry
-    group: networking.istio.io
-    name: httpbin.org
-  action: ALLOW
-  rules:
-  - to:
-    - operation:
-        methods: ["GET"]
-        paths: ["/get"]
+--8<-- "httpbin-authz.yaml"
 ```
 
 Apply the above policy programs the egress gateway to allow only permitted operations.
