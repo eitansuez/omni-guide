@@ -114,9 +114,49 @@ Here is a sample log output (broken into multiple lines for legibility):
 Routing calls to external endpoints through an egress gateway effectively gives us a Policy Enforcement Point (PEP): we can configure an authorization policy at that egress gateway point to control _who_ is allowed to make _what kinds_ of calls to _which_ endpoints.
 That is the essence of authorization.
 
-TODO: walk through an example
+Study the following example, an AuthorizationPolicy that allows only HTTP GET-type operations to the external `httpbin` service's `/get` endpoint and nothing else:
 
-## Analysis
+```yaml
+---
+apiVersion: security.istio.io/v1
+kind: AuthorizationPolicy
+metadata:
+  name: httpbin-get-only
+  namespace: common-infrastructure
+spec:
+  targetRefs:
+  - kind: ServiceEntry
+    group: networking.istio.io
+    name: httpbin.org
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        methods: ["GET"]
+        paths: ["/get"]
+```
+
+Apply the above policy programs the egress gateway to allow only permitted operations.
+
+Verify that you are authorized only to call that `/get` endpoint:
+
+```shell
+kubectl exec deploy/curl -- curl -s http://httpbin.org/get
+```
+
+Try a different endpoint:
+
+```shell
+kubectl exec deploy/curl -- curl -s http://httpbin.org/json
+```
+
+The response should indicate that the request was denied:
+
+```console
+RBAC: access denied
+```
+
+## Analysis for Egress
 
 The API we used to configure egress is familiar, the same API we use for ingress and, as you will see, mesh traffic.
 

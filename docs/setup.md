@@ -1,6 +1,10 @@
 # Setup
 
-Provision a Kubernetes cluster.
+## A Cluster, Gateway CRDs, and Istio
+
+Provision a Kubernetes cluster of your choosing.
+This could be a local [kind](https://kind.sigs.k8s.io/) cluster, or one running in your favorite cloud environment.
+My personal setup uses a local [k3d](https://k3d.io) cluster.
 
 ```shell
 k3d cluster create my-cluster \
@@ -16,7 +20,7 @@ Be sure to install the Kubernetes [Gateway API](https://gateway-api.sigs.k8s.io/
 kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.3.0/standard-install.yaml
 ```
 
-Install Istio in ambient mode (I used the current stable version, `1.26.2`):
+[Install Istio in ambient mode](https://istio.io/latest/docs/ambient/install/) (I am using the stable version at time of writing, `1.26.2`):
 
 ```shell
 istioctl install \
@@ -69,7 +73,7 @@ With setup out of the way, we begin by deploying a set of microservices to our c
 
 ## Deploy a set of microservices
 
-The canonical example used by the Istio project to represent a set of microservices is the `bookinfo` sample application.
+The canonical example used by the Istio project to represent a set of microservices is the [`bookinfo` sample application](https://istio.io/latest/docs/examples/bookinfo/).
 `bookinfo` consists of the following microservices, all running on the port `9080`: `productpage`, `details`, `reviews` and `ratings`.
 
 Begin by deploying these microservices to the Kubernetes cluster, in their own namespace, `bookinfo`:
@@ -83,16 +87,17 @@ kubectl apply -n bookinfo \
   -f https://raw.githubusercontent.com/istio/istio/refs/heads/master/samples/bookinfo/platform/kube/bookinfo.yaml
 ```
 
-We are no longer required to define "subsets", specific versions of a microservice, with a `DestinationRule`, we can simply use a Kubernetes `Service` definition with the right combination of selectors.
+In ambient mode, we are no longer required to define "subsets" - specific versions of a microservice - with a `DestinationRule`.
+We can simply use a Kubernetes `Service` definition with the right combination of selectors.
 
-Apply the following resource, which defines these "sub" services:
+Apply the following resource, which defines these "sub" services for `bookinfo`:
 
 ```shell
 kubectl apply -n bookinfo \
   -f https://raw.githubusercontent.com/istio/istio/refs/heads/master/samples/bookinfo/platform/kube/bookinfo-versions.yaml
 ```
 
-Finally, add all of the `bookinfo` workloads to the mesh:
+Finally, add all of the `bookinfo` workloads to the mesh, by [labeling their namespace](https://istio.io/latest/docs/ambient/getting-started/secure-and-visualize/):
 
 ```shell
 kubectl label namespace bookinfo istio.io/dataplane-mode=ambient

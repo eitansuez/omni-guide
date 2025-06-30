@@ -112,6 +112,8 @@ metadata:
   name: bookinfo-route
   namespace: bookinfo
 spec:
+  hostnames:
+  - bookinfo.example.com
   parentRefs:
   - name: shared-gateway
     namespace: common-infrastructure
@@ -173,9 +175,59 @@ Above, note the [SPIFFE](https://spiffe.io/docs/latest/spiffe-about/overview/) i
 
 This authorization policy is not strictly an ingress-specific concern, as it applies to any requests targeting the `productpage` service.
 
-## Test it
+## Test ingress
 
-TODO: get the gw ip address, send in a curl request to the gw and see response from productpage service
+We can obtain the external IP address of the ingress gateway either by inspecting the Service resource `status` section.
+
+```shell
+kubectl get svc -n common-infrastructure shared-gateway-istio
+```
+
+```console
+NAME                   TYPE           CLUSTER-IP     EXTERNAL-IP    PORT(S)                                      AGE
+shared-gateway-istio   LoadBalancer   10.43.94.151   192.168.97.2   15021:32006/TCP,80:31344/TCP,443:32559/TCP   175m
+```
+
+Or as an environment variable `GW_IP`:
+
+```shell
+export GW_IP=$(kubectl get svc -n common-infrastructure shared-gateway-istio -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+```
+
+Alternatively, we can inspect the Gateway resource's `status` section:
+
+```shell
+kubectl get gtw -n common-infrastructure shared-gateway
+```
+
+```console
+NAME             CLASS            ADDRESS        PROGRAMMED   AGE
+shared-gateway   istio            192.168.97.2   True         175m
+```
+
+ Capture the IP address as an environment variable:
+
+```shell
+export GW_IP=$(kubectl get gtw -n common-infrastructure shared-gateway -o jsonpath='{.status.addresses[0].value}')
+```
+
+With DNS to resolve to that address, we should be able to simply send a `curl` request.
+
+Alternatively (without DNS configured), we can instruct `curl` to resolve the hostname to that IP address as follows:
+
+```shell
+curl -s --insecure https://bookinfo.example.com/productpage --resolve bookinfo.example.com:443:$GW_IP | grep title
+```
+
+The response is an HTML page, and the above command just looks for the page title (to limit the verboseness of the output):
+
+```console
+<title>Simple Bookstore App</title>
+```
+
+This is evidence that ingress is configured and functioning.
+
+## Test authorization
 
 Attempt to call `productpage` from the unauthorized `curl` client running in the `default` namespace:
 
