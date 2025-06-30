@@ -1,4 +1,4 @@
-site_name: The power of a single API to secure, observe, and control traffic in all directions
+site_name: The power of a single API to control traffic in all directions
 site_url: https://eitansuez.github.io/omni-guide
 repo_url: https://github.com/eitansuez/omni-guide
 theme:
@@ -16,9 +16,10 @@ theme:
 nav:
 - index.md
 - setup.md
-- ingress.md
-- egress.md
-- mesh.md
+- Ingress: ingress.md
+- Egress: egress.md
+- Mesh traffic: mesh.md
+- summary.md
 markdown_extensions:
 - admonition
 - pymdownx.details
