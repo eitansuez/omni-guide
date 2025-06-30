@@ -1,0 +1,36 @@
+site_name: The power of a single API to secure, observe, and control traffic in all directions
+site_url: https://eitansuez.github.io/omni-guide
+repo_url: https://github.com/eitansuez/omni-guide
+theme:
+  name: material
+  features:
+  - navigation.top
+  - navigation.instant
+  - navigation.tracking
+  - navigation.footer
+  - navigation.expand
+  - content.code.annotate
+  - content.code.copy
+  palette:
+    primary: teal
+nav:
+- index.md
+- setup.md
+- ingress.md
+- egress.md
+- mesh.md
+markdown_extensions:
+- admonition
+- pymdownx.details
+- pymdownx.superfences
+- pymdownx.highlight:
+    anchor_linenums: true
+    line_spans: __span
+    pygments_lang_class: true
+- pymdownx.inlinehilite
+- pymdownx.snippets:
+    base_path: artifacts
+    check_paths: true
+- attr_list
+- pymdownx.tabbed:
+    alternate_style: true
