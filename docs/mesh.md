@@ -1,6 +1,39 @@
 # Configure & Control Mesh traffic
 
-One canonical example of traffic management in the mesh with the Gateway API is to configure traffic splitting, which is the basis for performing canary deployments or A/B tests.
+Back in [setup](setup.md#deploy-a-set-of-microservices), when you deployed the `bookinfo` sample application, you were instructed to label the `bookinfo` namespace:
+
+```shell
+kubectl label namespace bookinfo istio.io/dataplane-mode=ambient
+```
+
+That simple instruction was all that was required to make the workloads _a part of the mesh_.
+Unlike sidecar mode, with ambient mode workloads do not require a restart, because no sidecars need to be injected.
+The mesh concerns reside in a separate layer, and become a part of the underlying platform.
+
+It's important to understand and to highlight what it means exactly for a workload to be "a part of the mesh."
+What happens behind the scenes?
+
+The following takes place implicitly, without requiring any configuration:
+
+- Workloads are assigned cryptographic identities by the control plane (ztunnel maintains them on behalf of your workloads).
+- The Istio CNI plugin reroutes the network communication in and out of each pod through the ztunnel layer 4 node proxies.
+- The ztunnel proxies leverage those workload identities to encrypt all network communication between workloads using mutual TLS.
+- The ztunnel proxies automatically produce and expose layer 4 telemetry: TCP bytes sent and received, TCP connections opened and closed.
+
+The mesh doesn't require any additional configuration, but it definitely has more to offer.
+We can:
+
+- Layer on L4 authorization policies, restricting network communications based on workload identity
+- Add L7 traffic management policies, leveraging higher level information for making routing decisions
+- Add L7 authorization policies, again leveraging higher level information for making security-related decisions
+- Add L7 telemetry
+
+All of those layer 7 capabilities rely on layer 7 proxies, which ambient mode allows us to provision on demand.
+Let us work through an example.
+
+## Traffic Management Example
+
+A canonical example of traffic management in the mesh is to configure traffic splitting, which is the basis for performing canary deployments and A/B tests.
 
 Note:  there may exist specific mesh features that were supported by Istio's original API that may still be considered experimental in the Gateway API.
 
@@ -12,7 +45,7 @@ We begin by provisioning a waypoint.
 
 Traffic splitting, and the conditional routing of HTTP requests, perhaps based on specific headers in the request, are by definition a layer 7 concern, and so require that services be proxied by a layer 7 gateway.
 
-In Istio Ambient mode, we called these internal gateways "waypoints"; the term "micro gateway" is often used in this context.
+In Istio ambient mode, we called these internal gateways "waypoints"; the term "micro gateway" is often used to refer to them.
 
 As we already saw in the egress example, the Istio CLI provides a convenience command to provision a waypoint and optionally associate it to specific workloads.
 
@@ -106,8 +139,7 @@ In this mesh example, we applied the same API, but to control internal traffic.
 
 The overall procedure was very similar to ingress and egress:
 
-- provision the gateway or waypoint,
-- associate the proxy with specific services (not applicable for the ingress use case)
-- define traffic policies (routing rules and others) such as HTTPRoutes and possibly DestinationRule's
-- apply security policies such as AuthorizationPolicy resources.
-
+- Provision the gateway or waypoint.
+- Associate the proxy with specific services (not applicable for the ingress use case).
+- Define traffic policies (routing rules and others) such as HTTPRoutes and possibly DestinationRule's.
+- Apply security policies such as AuthorizationPolicy resources.
