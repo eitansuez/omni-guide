@@ -20,6 +20,8 @@ nav:
 - Egress: egress.md
 - Mesh traffic: mesh.md
 - summary.md
+- Blog:
+  - blog/index.md
 markdown_extensions:
 - admonition
 - pymdownx.details
